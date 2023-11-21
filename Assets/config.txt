@@ -1,0 +1,3 @@
+﻿Speaker:en-US-Neural2-G
+Speed:0.78
+Pitch:0
