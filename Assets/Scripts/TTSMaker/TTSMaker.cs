@@ -15,7 +15,6 @@ public class TTSMaker : MonoBehaviour
 {
     [SerializeField] private Dropdown dropDown;
     [SerializeField] private Text curSpeaker;
-    [SerializeField] private Text LogTxt;
     [SerializeField] private InputField _inputField;
 
     [SerializeField] private Image backgroundImg;
@@ -23,8 +22,9 @@ public class TTSMaker : MonoBehaviour
 
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private Image[] images;
-    
-    
+
+    [SerializeField] private LogManager _logManager;
+
     private void Start()
     {
         Screen.SetResolution(1280, 720, FullScreenMode.Windowed);
@@ -65,109 +65,28 @@ public class TTSMaker : MonoBehaviour
 
     private IEnumerator MakeTTS(System.Action<AudioClip> lastVoice)
     {
-        if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin") yield return Archipin_TTS(lastVoice, curSpeaker.text);
-        else yield return Mindslab_TTS(lastVoice);
+        if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin") 
+            yield return TTSManager.Archipin_TTS(
+                input_text:_inputField.text, 
+                voiceName:curSpeaker.text, 
+                lastVoice:lastVoice,
+                logMgr:_logManager);
+        else 
+            yield return TTSManager.Mindslab_TTS(
+                input_text:_inputField.text, 
+                voiceName:curSpeaker.text, 
+                lastVoice:lastVoice,
+                logMgr:_logManager);
     }
 
-    private IEnumerator Mindslab_TTS(System.Action<AudioClip> lastVoice)
-    {
-        var textAnim = logTextAnim();
-        StartCoroutine(textAnim);
-        
-        const string host = "https://norchestra.maum.ai/harmonize/dosmart";
-        var requestData = new NewTTSModel(_inputField.text, curSpeaker.text);
-        var requestJson = JsonUtility.ToJson(requestData);
-        var bytes = Encoding.UTF8.GetBytes(requestJson);
-
-        var webRequest = new UnityWebRequest(host, UnityWebRequest.kHttpVerbPOST);
-        webRequest.SetRequestHeader("Content-Type", "application/json");
-        webRequest.SetRequestHeader("cache-control", "no-cache");
-        webRequest.uploadHandler = new UploadHandlerRaw(bytes);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-
-        yield return webRequest.SendWebRequest();
-
-        if (webRequest.result == UnityWebRequest.Result.ConnectionError || 
-            webRequest.result == UnityWebRequest.Result.ProtocolError)
-        {
-            StopCoroutine(textAnim);
-            lastVoice(null);
-            LogTxt.text = webRequest.error.ToString();
-        }
-        else
-        {
-            var response = webRequest.downloadHandler.data;
-            StopCoroutine(textAnim);
-            var wav = new WAV(response);
-            var audioClip = AudioClip.Create(_inputField.text.Replace(' ', '_'), wav.SampleCount, 1, wav.Frequency, false);
-            audioClip.SetData(wav.LeftChannel, 0);
-            lastVoice(audioClip);
-        }
-    }
-
-    private IEnumerator Archipin_TTS(System.Action<AudioClip> lastVoice, string voiceName)
-    {
-        var textAnim = logTextAnim();
-        StartCoroutine(textAnim);
-        
-        var host = voiceName == "Vivian" ? "https://wgi02.archipindev.com/voice-generator/" : "https://wgi02.archipindev.com/tts/";
-        // var requestDict = new Dictionary<string, string> { {"input_text", _inputField.text} };
-        var requestJson = JsonUtility.ToJson(new ArchipinTTSModel()
-        {
-            input_text = _inputField.text
-        });
-        var bytes = Encoding.UTF8.GetBytes(requestJson);
-        
-        var webRequest = new UnityWebRequest(host, UnityWebRequest.kHttpVerbPOST);
-        webRequest.uploadHandler = new UploadHandlerRaw(bytes);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-        yield return webRequest.SendWebRequest();
-        
-        if (webRequest.result == UnityWebRequest.Result.ConnectionError || 
-            webRequest.result == UnityWebRequest.Result.ProtocolError)
-        {
-            StopCoroutine(textAnim);
-            lastVoice(null);
-            LogTxt.text = webRequest.error.ToString();
-        }
-        else
-        {
-            var response = webRequest.downloadHandler.data;
-            StopCoroutine(textAnim);
-            var wav = new WAV(response);
-            Debug.Log($"{wav.Frequency}/{wav.SampleCount}/{wav.ChannelCount}");
-            var audioClip = AudioClip.Create(_inputField.text.Replace(' ', '_'), wav.SampleCount, 1, wav.Frequency, false);
-            audioClip.SetData(wav.LeftChannel, 0);
-            lastVoice(audioClip);
-        }
-    }
-
-    private IEnumerator logTextAnim()
-    {
-        var count = 0;
-        while (true)
-        {
-            LogTxt.text = count switch
-            {
-                0 => "Log: Making tts.",
-                1 => "Log: Making tts..",
-                2 => "Log: Making tts...",
-                _ => LogTxt.text
-            };
-
-            count += 1;
-            if (count >= 3) count = 0;
-            
-            yield return new WaitForSeconds(0.2f);
-        }
-    }
-    
     public void Toggle_Make()
     {
         makeButton.interactable = false;
         StartCoroutine(MakeTTS(clip =>
         {
-            LogTxt.text = "Log:\tSpeaker-> " + curSpeaker.text + "\n\t\tLast Text-> " + _inputField.text;
+            _logManager.ChangeLogText(
+                "Log:\tSpeaker-> " + curSpeaker.text + "\n\t\tLast Text-> " + _inputField.text
+                );
             _audioSource.clip = clip;
             _audioSource.Play();
         }));
@@ -184,7 +103,7 @@ public class TTSMaker : MonoBehaviour
 
         var filename = Save(curSpeaker.text, _audioSource.clip);
         SavWav.Save(filename, _audioSource.clip);
-        LogTxt.text = "Log: " + $"Save complete! -> {filename}.wav";
+        _logManager.ChangeLogText("Log: " + $"Save complete! -> {filename}.wav");
     }
 
     private static string Save(string npc, Object audioClip)

@@ -52,8 +52,8 @@ public class AutoTTSMaker : MonoBehaviour
     private Vector2 initPos = new Vector2(80, -15);
     private static int createCount = 0;
 
-    public List<Tuple<string, string>> data;
-    // Start is called before the first frame update
+    private List<Tuple<string, string>> data;
+
     private void Start()
     {
         Screen.SetResolution(1280, 720, FullScreenMode.Windowed);
@@ -75,11 +75,6 @@ public class AutoTTSMaker : MonoBehaviour
         }
     }
 
-    public void SaveClip()
-    {
-        
-    }
-
     private void LoadCSV()
     {
         var dialog = new VistaOpenFileDialog();
@@ -95,83 +90,6 @@ public class AutoTTSMaker : MonoBehaviour
         CreateLog("\"" + dialog.FileName + "\" data loaded!, Total: " + data.Count);
     }
 
-    private IEnumerator MakeTTS(string sentence, string filepath)
-    {
-        const string host = "https://norchestra.maum.ai/harmonize/dosmart";
-        var requestData = new NewTTSModel(sentence.Replace("\r", ""), curSpeaker.text);
-        var requestJson = JsonUtility.ToJson(requestData);
-        var bytes = Encoding.UTF8.GetBytes(requestJson);
-
-        var webRequest = new UnityWebRequest(host, UnityWebRequest.kHttpVerbPOST);
-        webRequest.SetRequestHeader("Content-Type", "application/json");
-        webRequest.SetRequestHeader("cache-control", "no-cache");
-        webRequest.uploadHandler = new UploadHandlerRaw(bytes);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-
-        yield return webRequest.SendWebRequest();
-
-        if (webRequest.result == UnityWebRequest.Result.ConnectionError || 
-            webRequest.result == UnityWebRequest.Result.ProtocolError)
-        {
-            CreateLog($"-> ERROR: web request connection or protocol error");
-        }
-        else
-        {
-            try
-            {
-                var response = webRequest.downloadHandler.data;
-                var wav = new WAV(response);
-                var audioClip = AudioClip.Create("tts", wav.SampleCount, 1, wav.Frequency, false);
-                audioClip.SetData(wav.LeftChannel, 0);
-
-                SavWav.Save(filepath + ".wav", audioClip);
-                CreateLog("-> Save path:\"" + filepath + "\"");
-            }
-            catch (Exception e)
-            {
-                CreateLog($"-> Error: {e}");
-            }
-        }
-    }
-    
-    private IEnumerator Archipin_TTS(string sentence, string filepath)
-    {
-        const string host = "https://wgi02.archipindev.com/voice-generator/";
-        var requestJson = JsonUtility.ToJson(new ArchipinTTSModel()
-        {
-            input_text = sentence
-        });
-        var bytes = Encoding.UTF8.GetBytes(requestJson);
-        
-        var webRequest = new UnityWebRequest(host, UnityWebRequest.kHttpVerbPOST);
-        webRequest.uploadHandler = new UploadHandlerRaw(bytes);
-        webRequest.downloadHandler = new DownloadHandlerBuffer();
-        yield return webRequest.SendWebRequest();
-        
-        if (webRequest.result == UnityWebRequest.Result.ConnectionError || 
-            webRequest.result == UnityWebRequest.Result.ProtocolError)
-        {
-            CreateLog($"-> ERROR: web request connection or protocol error");
-        }
-        else
-        {
-            try
-            {
-                var response = webRequest.downloadHandler.data;
-                var wav = new WAV(response);
-                var audioClip = AudioClip.Create("tts", wav.SampleCount, 1, wav.Frequency, false);
-                audioClip.SetData(wav.LeftChannel, 0);
-
-                SavWav.Save(filepath + ".wav", audioClip);
-                CreateLog("-> Save path:\"" + filepath + "\"");
-            }
-            catch (Exception e)
-            {
-                CreateLog($"-> Error: {e}");
-            }
-        }
-    }
-
     public void Toggled_Load()
     {
         LoadCSV();
@@ -184,10 +102,31 @@ public class AutoTTSMaker : MonoBehaviour
         for (var i = 0; i < data.Count; i++)
         {
             CreateLog($"{i + 1}/{data.Count} making... speaker: {curSpeaker.text}, sentence: {data[i].Item1}");
-            if (curSpeaker.text != "Vivian")
-                yield return StartCoroutine(MakeTTS(data[i].Item1, data[i].Item2));
+            if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin")
+                yield return StartCoroutine(TTSManager.Archipin_TTS(
+                    data[i].Item1, curSpeaker.text, audioClip =>
+                    {
+                        SavWav.Save(data[i].Item2 + ".wav", audioClip);
+                    }, null, log =>
+                    {
+                        if (log == "-> Save path:\"")
+                            CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
+                        else
+                            CreateLog(log);
+                    }));
+            
             else 
-                yield return StartCoroutine(Archipin_TTS(data[i].Item1, data[i].Item2));
+                yield return StartCoroutine(TTSManager.Mindslab_TTS(
+                    data[i].Item1, curSpeaker.text, audioClip =>
+                    {
+                        SavWav.Save(data[i].Item2 + ".wav", audioClip);
+                    }, null, log =>
+                    {
+                        if (log == "-> Save path:\"")
+                            CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
+                        else
+                            CreateLog(log);
+                    }));
         }
     }
 
