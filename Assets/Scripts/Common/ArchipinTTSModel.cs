@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Archipin TTS model dto
+/// </summary>
 [SerializeField]
 public class ArchipinTTSModel
 {

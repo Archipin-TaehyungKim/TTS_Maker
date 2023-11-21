@@ -103,7 +103,7 @@ public class AutoTTSMaker : MonoBehaviour
         {
             CreateLog($"{i + 1}/{data.Count} making... speaker: {curSpeaker.text}, sentence: {data[i].Item1}");
             if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin")
-                yield return StartCoroutine(TTSManager.Archipin_TTS(
+                yield return StartCoroutine(TTSManager.ArchipinTTS(
                     data[i].Item1, curSpeaker.text, audioClip =>
                     {
                         SavWav.Save(data[i].Item2 + ".wav", audioClip);
@@ -116,7 +116,7 @@ public class AutoTTSMaker : MonoBehaviour
                     }));
             
             else 
-                yield return StartCoroutine(TTSManager.Mindslab_TTS(
+                yield return StartCoroutine(TTSManager.MindslabTTS(
                     data[i].Item1, curSpeaker.text, audioClip =>
                     {
                         SavWav.Save(data[i].Item2 + ".wav", audioClip);

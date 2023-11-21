@@ -7,6 +7,12 @@ public class NewTTSModel
     public string[] param;
     public string sid;
     
+    /// <summary>
+    /// Will deprecated.
+    /// Mindslab's TTS request dto
+    /// </summary>
+    /// <param name="data">input text</param>
+    /// <param name="voiceName">npc name</param>
     public NewTTSModel(string data, string voiceName)
     {
         app_id = voiceName switch

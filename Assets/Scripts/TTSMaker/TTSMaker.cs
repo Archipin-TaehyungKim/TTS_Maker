@@ -11,6 +11,9 @@ using Application = UnityEngine.Application;
 using Button = UnityEngine.UI.Button;
 using Screen = UnityEngine.Screen;
 
+/// <summary>
+/// This script makes tts one by one.
+/// </summary>
 public class TTSMaker : MonoBehaviour
 {
     [SerializeField] private Dropdown dropDown;
@@ -50,8 +53,10 @@ public class TTSMaker : MonoBehaviour
     
     private void Update()
     {
+        // NPC image
         Change_Image();
         
+        // for announcement
         if (_audioSource.isPlaying)
         {
             backgroundImg.color = new Color(224.0f/255.0f, 66.0f/255.0f, 26.0f/255.0f, 1);
@@ -66,13 +71,13 @@ public class TTSMaker : MonoBehaviour
     private IEnumerator MakeTTS(System.Action<AudioClip> lastVoice)
     {
         if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin") 
-            yield return TTSManager.Archipin_TTS(
+            yield return TTSManager.ArchipinTTS(
                 input_text:_inputField.text, 
                 voiceName:curSpeaker.text, 
                 lastVoice:lastVoice,
                 logMgr:_logManager);
         else 
-            yield return TTSManager.Mindslab_TTS(
+            yield return TTSManager.MindslabTTS(
                 input_text:_inputField.text, 
                 voiceName:curSpeaker.text, 
                 lastVoice:lastVoice,
