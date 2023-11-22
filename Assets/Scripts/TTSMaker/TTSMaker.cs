@@ -18,14 +18,15 @@ public class TTSMaker : MonoBehaviour
 {
     [SerializeField] private Dropdown dropDown;
     [SerializeField] private Text curSpeaker;
-    [SerializeField] private InputField _inputField;
+    [SerializeField] private InputField _input_text;
 
     [SerializeField] private Image backgroundImg;
     [SerializeField] private Button makeButton;
 
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private Image[] images;
-
+    [SerializeField] private InputField _speed;
+    
     [SerializeField] private LogManager _logManager;
 
     private void Start()
@@ -49,6 +50,8 @@ public class TTSMaker : MonoBehaviour
                 }
             }
         }
+
+        _speed.text = "1.0";
     }
     
     private void Update()
@@ -70,15 +73,16 @@ public class TTSMaker : MonoBehaviour
 
     private IEnumerator MakeTTS(System.Action<AudioClip> lastVoice)
     {
-        if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin") 
+        if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin" || curSpeaker.text == "Luna") 
             yield return TTSManager.ArchipinTTS(
-                input_text:_inputField.text, 
+                input_text:_input_text.text, 
                 voiceName:curSpeaker.text, 
                 lastVoice:lastVoice,
-                logMgr:_logManager);
+                logMgr:_logManager,
+                speed:float.Parse(_speed.text));
         else 
             yield return TTSManager.MindslabTTS(
-                input_text:_inputField.text, 
+                input_text:_input_text.text, 
                 voiceName:curSpeaker.text, 
                 lastVoice:lastVoice,
                 logMgr:_logManager);
@@ -90,7 +94,7 @@ public class TTSMaker : MonoBehaviour
         StartCoroutine(MakeTTS(clip =>
         {
             _logManager.ChangeLogText(
-                "Log:\tSpeaker-> " + curSpeaker.text + "\n\t\tLast Text-> " + _inputField.text
+                "Log:\tSpeaker-> " + curSpeaker.text + "\n\t\tLast Text-> " + _input_text.text
                 );
             _audioSource.clip = clip;
             _audioSource.Play();

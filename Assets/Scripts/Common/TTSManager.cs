@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class TTSManager
 {
-    public static IEnumerator ArchipinTTS(string input_text, string voiceName, 
+    public static IEnumerator ArchipinTTS(string input_text, string voiceName, float speed = 1.0f,
         System.Action<AudioClip> lastVoice=null, LogManager logMgr=null, Action<string> logMsg=null)
     {
         logMgr?.StartLogAnim();
@@ -17,7 +17,8 @@ public class TTSManager
         {
             input_text = input_text,
             npc = voiceName,
-            student_id = "tts_maker"
+            student_id = "tts_maker",
+            speed = speed
         });
         var bytes = Encoding.UTF8.GetBytes(requestJson);
         
