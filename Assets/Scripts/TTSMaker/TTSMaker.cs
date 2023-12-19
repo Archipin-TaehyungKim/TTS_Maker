@@ -17,6 +17,7 @@ using Screen = UnityEngine.Screen;
 public class TTSMaker : MonoBehaviour
 {
     [SerializeField] private Dropdown dropDown;
+    [SerializeField] private Text server;
     [SerializeField] private Text curSpeaker;
     [SerializeField] private InputField _input_text;
 
@@ -73,14 +74,17 @@ public class TTSMaker : MonoBehaviour
 
     private IEnumerator MakeTTS(System.Action<AudioClip> lastVoice)
     {
-        if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin" || curSpeaker.text == "Luna") 
+        if (server.text == "Archipin")
+        {
             yield return TTSManager.ArchipinTTS(
                 input_text:_input_text.text, 
                 voiceName:curSpeaker.text, 
                 lastVoice:lastVoice,
                 logMgr:_logManager,
                 speed:float.Parse(_speed.text));
-        else 
+                
+        }
+        else
             yield return TTSManager.MindslabTTS(
                 input_text:_input_text.text, 
                 voiceName:curSpeaker.text, 

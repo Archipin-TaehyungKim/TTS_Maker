@@ -102,31 +102,42 @@ public class AutoTTSMaker : MonoBehaviour
         for (var i = 0; i < data.Count; i++)
         {
             CreateLog($"{i + 1}/{data.Count} making... speaker: {curSpeaker.text}, sentence: {data[i].Item1}");
-            if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin")
-                yield return StartCoroutine(TTSManager.ArchipinTTS(
-                    data[i].Item1, curSpeaker.text, 1.0f, audioClip =>
-                    {
-                        SavWav.Save(data[i].Item2 + ".wav", audioClip);
-                    }, null, log =>
-                    {
-                        if (log == "-> Save path:\"")
-                            CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
-                        else
-                            CreateLog(log);
-                    }));
-            
-            else 
-                yield return StartCoroutine(TTSManager.MindslabTTS(
-                    data[i].Item1, curSpeaker.text, audioClip =>
-                    {
-                        SavWav.Save(data[i].Item2 + ".wav", audioClip);
-                    }, null, log =>
-                    {
-                        if (log == "-> Save path:\"")
-                            CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
-                        else
-                            CreateLog(log);
-                    }));
+            // if (curSpeaker.text == "Vivian" || curSpeaker.text == "Zeppelin")
+            //     yield return StartCoroutine(TTSManager.ArchipinTTS(
+            //         data[i].Item1, curSpeaker.text, 1.0f, audioClip =>
+            //         {
+            //             SavWav.Save(data[i].Item2 + ".wav", audioClip);
+            //         }, null, log =>
+            //         {
+            //             if (log == "-> Save path:\"")
+            //                 CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
+            //             else
+            //                 CreateLog(log);
+            //         }));
+            //
+            // else 
+            //     yield return StartCoroutine(TTSManager.MindslabTTS(
+            //         data[i].Item1, curSpeaker.text, audioClip =>
+            //         {
+            //             SavWav.Save(data[i].Item2 + ".wav", audioClip);
+            //         }, null, log =>
+            //         {
+            //             if (log == "-> Save path:\"")
+            //                 CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
+            //             else
+            //                 CreateLog(log);
+            //         }));
+            yield return StartCoroutine(TTSManager.ArchipinTTS(
+                data[i].Item1, curSpeaker.text, 1.0f, audioClip =>
+                {
+                    SavWav.Save(data[i].Item2 + ".wav", audioClip);
+                }, null, log =>
+                {
+                    if (log == "-> Save path:\"")
+                        CreateLog("-> Save path:\"" + data[i].Item2 + "\"");
+                    else
+                        CreateLog(log);
+                }));
         }
     }
 
